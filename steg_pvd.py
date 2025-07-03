@@ -105,6 +105,7 @@ def extract_text_from_image(stego_img: Image.Image) -> str:
 
     channels = [r, g, b]
     secret_bits = ''
+
     for c in channels:
         for i in range(0, len(c)-1, 2):
             p1, p2 = c[i], c[i+1]
@@ -114,9 +115,21 @@ def extract_text_from_image(stego_img: Image.Image) -> str:
             m = d - r_min
             bits = format(m, f'0{n}b')
             secret_bits += bits
+
+            # Jika penanda akhir ditemukan, berhenti
             if '1111111111111110' in secret_bits:
                 break
         if '1111111111111110' in secret_bits:
             break
+
+    # Potong bit sampai sebelum EOF marker
     secret_bits = secret_bits.split('1111111111111110')[0]
-    return ''.join(chr(int(secret_bits[i:i+8], 2)) for i in range(0, len(secret_bits), 8))
+
+    # Konversi ke teks hanya jika genap 8 bit
+    text = ''
+    for i in range(0, len(secret_bits), 8):
+        byte = secret_bits[i:i+8]
+        if len(byte) == 8:
+            text += chr(int(byte, 2))
+
+    return text
